@@ -1,0 +1,54 @@
+# --- Build output ---
+build/
+cmake-build-*/
+out/
+bin/
+lib/
+
+# --- CMake generated ---
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+compile_commands.json
+.cache/
+
+# --- Object / library files ---
+*.o
+*.obj
+*.lo
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.d
+
+# --- Dependencies / packages ---
+vcpkg_installed/
+conanbuildinfo.cmake
+_deps/
+third_party/*/
+
+# --- Editor / IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# --- Logs / temp ---
+*.log
+*.tmp
+
+# --- Model weights (large binaries, keep dirs tracked) ---
+*.gguf
+*.ggml
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.onnx
