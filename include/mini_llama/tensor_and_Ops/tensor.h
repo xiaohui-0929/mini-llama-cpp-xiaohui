@@ -60,7 +60,6 @@ struct Tensor {
         } else {
             throw std::out_of_range("Index out of range in operator[]");
         }
-        
     }
     float operator[](size_t i) const { 
         if (i < data_.size()) {

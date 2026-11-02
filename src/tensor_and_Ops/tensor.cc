@@ -104,98 +104,109 @@ size_t Tensor::FlatIndex(const std::vector<int>& indices) const {
 }
 
 float& Tensor::At(const std::vector<int>& indices) {
-  return data_[FlatIndex(indices)];
+    int idx = FlatIndex(indices);
+    if (idx < data_.size()) {
+        return data_[idx];
+    } else {
+        throw std::out_of_range("Index out of range in At");
+    }
+  
 }
 
 float Tensor::At(const std::vector<int>& indices) const {
-  return data_[FlatIndex(indices)];
+    int idx = FlatIndex(indices);
+    if (idx < data_.size()) {
+        return data_[idx];
+    } else {
+        throw std::out_of_range("Index out of range in At");
+    }
 }
 
 // ---------------------------------------------------------------------------
 // Convenience 1D accessor
 // ---------------------------------------------------------------------------
 float& Tensor::At1(int i) {
-  CheckRank(*this, 1, "At1");
-  CheckAxisIndex(*this, 0, i, "At1");
-  return data_[i];
+    CheckRank(*this, 1, "At1");
+    CheckAxisIndex(*this, 0, i, "At1");
+    return data_[i];
 }
 
 float Tensor::At1(int i) const {
-  CheckRank(*this, 1, "At1");
-  CheckAxisIndex(*this, 0, i, "At1");
-  return data_[i];
+    CheckRank(*this, 1, "At1");
+    CheckAxisIndex(*this, 0, i, "At1");
+    return data_[i];
 }
 
 // ---------------------------------------------------------------------------
 // Convenience 2D accessor
 // ---------------------------------------------------------------------------
 float& Tensor::At2(int i, int j) {
-  CheckRank(*this, 2, "At2");
-  CheckAxisIndex(*this, 0, i, "At2");
-  CheckAxisIndex(*this, 1, j, "At2");
-  return data_[i * shape_[1] + j];
+    CheckRank(*this, 2, "At2");
+    CheckAxisIndex(*this, 0, i, "At2");
+    CheckAxisIndex(*this, 1, j, "At2");
+    return data_[i * shape_[1] + j];
 }
 
 float Tensor::At2(int i, int j) const {
-  CheckRank(*this, 2, "At2");
-  CheckAxisIndex(*this, 0, i, "At2");
-  CheckAxisIndex(*this, 1, j, "At2");
-  return data_[i * shape_[1] + j];
+    CheckRank(*this, 2, "At2");
+    CheckAxisIndex(*this, 0, i, "At2");
+    CheckAxisIndex(*this, 1, j, "At2");
+    return data_[i * shape_[1] + j];
 }
 
 // ---------------------------------------------------------------------------
 // Convenience 3D accessor
 // ---------------------------------------------------------------------------
 float& Tensor::At3(int i, int j, int k) {
-  CheckRank(*this, 3, "At3");
-  CheckAxisIndex(*this, 0, i, "At3");
-  CheckAxisIndex(*this, 1, j, "At3");
-  CheckAxisIndex(*this, 2, k, "At3");
-  return data_[(i * shape_[1] + j) * shape_[2] + k];
+    CheckRank(*this, 3, "At3");
+    CheckAxisIndex(*this, 0, i, "At3");
+    CheckAxisIndex(*this, 1, j, "At3");
+    CheckAxisIndex(*this, 2, k, "At3");
+    return data_[(i * shape_[1] + j) * shape_[2] + k];
 }
 
 float Tensor::At3(int i, int j, int k) const {
-  CheckRank(*this, 3, "At3");
-  CheckAxisIndex(*this, 0, i, "At3");
-  CheckAxisIndex(*this, 1, j, "At3");
-  CheckAxisIndex(*this, 2, k, "At3");
-  return data_[(i * shape_[1] + j) * shape_[2] + k];
+    CheckRank(*this, 3, "At3");
+    CheckAxisIndex(*this, 0, i, "At3");
+    CheckAxisIndex(*this, 1, j, "At3");
+    CheckAxisIndex(*this, 2, k, "At3");
+    return data_[(i * shape_[1] + j) * shape_[2] + k];
 }
 
 // ---------------------------------------------------------------------------
 // Convenience 4D accessor
 // ---------------------------------------------------------------------------
 float& Tensor::At4(int i, int j, int k, int l) {
-  CheckRank(*this, 4, "At4");
-  CheckAxisIndex(*this, 0, i, "At4");
-  CheckAxisIndex(*this, 1, j, "At4");
-  CheckAxisIndex(*this, 2, k, "At4");
-  CheckAxisIndex(*this, 3, l, "At4");
-  return data_[((i * shape_[1] + j) * shape_[2] + k) * shape_[3] + l];
+    CheckRank(*this, 4, "At4");
+    CheckAxisIndex(*this, 0, i, "At4");
+    CheckAxisIndex(*this, 1, j, "At4");
+    CheckAxisIndex(*this, 2, k, "At4");
+    CheckAxisIndex(*this, 3, l, "At4");
+    return data_[((i * shape_[1] + j) * shape_[2] + k) * shape_[3] + l];
 }
 
 float Tensor::At4(int i, int j, int k, int l) const {
-  CheckRank(*this, 4, "At4");
-  CheckAxisIndex(*this, 0, i, "At4");
-  CheckAxisIndex(*this, 1, j, "At4");
-  CheckAxisIndex(*this, 2, k, "At4");
-  CheckAxisIndex(*this, 3, l, "At4");
-  return data_[((i * shape_[1] + j) * shape_[2] + k) * shape_[3] + l];
+    CheckRank(*this, 4, "At4");
+    CheckAxisIndex(*this, 0, i, "At4");
+    CheckAxisIndex(*this, 1, j, "At4");
+    CheckAxisIndex(*this, 2, k, "At4");
+    CheckAxisIndex(*this, 3, l, "At4");
+    return data_[((i * shape_[1] + j) * shape_[2] + k) * shape_[3] + l];
 }
 
 // ---------------------------------------------------------------------------
 // Row pointer for 2D tensors
 // ---------------------------------------------------------------------------
 float* Tensor::RowPtr(int row) {
-  CheckRank(*this, 2, "row_ptr");
-  CheckAxisIndex(*this, 0, row, "row_ptr");
-  return data_.data() + row * shape_[1];
+    CheckRank(*this, 2, "row_ptr");
+    CheckAxisIndex(*this, 0, row, "row_ptr");
+    return data_.data() + row * shape_[1];
 }
 
 const float* Tensor::RowPtr(int row) const {
-  CheckRank(*this, 2, "row_ptr");
-  CheckAxisIndex(*this, 0, row, "row_ptr");
-  return data_.data() + row * shape_[1];
+    CheckRank(*this, 2, "row_ptr");
+    CheckAxisIndex(*this, 0, row, "row_ptr");
+    return data_.data() + row * shape_[1];
 }
 
 // ---------------------------------------------------------------------------
@@ -203,11 +214,11 @@ const float* Tensor::RowPtr(int row) const {
 // ---------------------------------------------------------------------------
 void Tensor::AssertShape(const std::vector<int>& expected,
                          const char* caller) const {
-  if (shape_ != expected) {
-    throw std::runtime_error(
-        std::string(CallerName(caller)) + ": shape mismatch. expected " +
-        ShapeToString(expected) + ", got " + ShapeStringShort());
-  }
+    if (shape_ != expected) {
+        throw std::runtime_error(
+            std::string(CallerName(caller)) + ": shape mismatch. expected " +
+            ShapeToString(expected) + ", got " + ShapeStringShort());
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -215,16 +226,16 @@ void Tensor::AssertShape(const std::vector<int>& expected,
 // ---------------------------------------------------------------------------
 Tensor Tensor::ReshapeChecked(const std::vector<int>& new_shape,
                               const char* caller) const {
-  const size_t new_total = CheckedNumel(new_shape, CallerName(caller));
-  if (new_total != data_.size()) {
-    throw std::runtime_error(
-        std::string(CallerName(caller)) + ": cannot reshape tensor with " +
-        std::to_string(data_.size()) + " elements into shape with " +
-        std::to_string(new_total) + " elements");
-  }
-  Tensor r = *this;
-  r.shape_ = new_shape;
-  return r;
+    const size_t new_total = CheckedNumel(new_shape, CallerName(caller));
+    if (new_total != data_.size()) {
+        throw std::runtime_error(
+            std::string(CallerName(caller)) + ": cannot reshape tensor with " +
+            std::to_string(data_.size()) + " elements into shape with " +
+            std::to_string(new_total) + " elements");
+    }
+    Tensor r = *this;
+    r.shape_ = new_shape;
+    return r;
 }
 
 std::string Tensor::ShapeStringShort() const { return ShapeToString(shape_); }

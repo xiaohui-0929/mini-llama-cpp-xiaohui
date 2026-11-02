@@ -90,6 +90,18 @@ static bool TestTensorIndexTooLarge() {
     return true;
 }
 
+static bool TestTensorIndexNull() {
+    Tensor t;
+    try {
+        t.At({});
+        MINI_LLAMA_ASSERT_FAIL(
+            "expected exception for out of range");
+    } catch (const std::out_of_range&) {
+        // expected
+    }
+    return true;
+}
+
 static bool TestTensor1dAccess() {
     Tensor t({5}, 0.0f);
     t[2] = 42.0f;
@@ -312,6 +324,8 @@ static struct TensorTestRegistrar {
                     TestTensorIndexNegative);
         RegisterTest("tensor_index_too_large",
                     TestTensorIndexTooLarge);
+        RegisterTest("tensor_index_null",
+                    TestTensorIndexNull);
         RegisterTest("tensor_1d_access",
                     TestTensor1dAccess);
         RegisterTest("make_tensor_helpers",
