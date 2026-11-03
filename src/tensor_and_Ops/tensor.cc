@@ -53,7 +53,7 @@ size_t CheckedNumel(const std::vector<int>& shape, const char* caller) {
 }
 
 // 检查 所求维度 是否符合
-void CheckRank(const Tensor& t, int expected, const char* caller) {
+void CheckRank(const Tensor& t, size_t expected, const char* caller) {
     if (t.num_dims() != expected) {
         throw std::runtime_error(std::string(caller) + " expected " +
                                 std::to_string(expected) + "D tensor, got " +
@@ -104,7 +104,7 @@ size_t Tensor::FlatIndex(const std::vector<int>& indices) const {
 }
 
 float& Tensor::At(const std::vector<int>& indices) {
-    int idx = FlatIndex(indices);
+    size_t idx = FlatIndex(indices);
     if (idx < data_.size()) {
         return data_[idx];
     } else {
@@ -114,7 +114,7 @@ float& Tensor::At(const std::vector<int>& indices) {
 }
 
 float Tensor::At(const std::vector<int>& indices) const {
-    int idx = FlatIndex(indices);
+    size_t idx = FlatIndex(indices);
     if (idx < data_.size()) {
         return data_[idx];
     } else {

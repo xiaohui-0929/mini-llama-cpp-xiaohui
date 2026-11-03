@@ -315,7 +315,7 @@ static struct TensorTestRegistrar {
         RegisterTest("tensor_rejects_zero_dimension",
                      TestTensorRejectsZeroDimension);
         RegisterTest("tensor_rejects_negative_dimension",
-                    TestTensorIndexNegative);
+                     TestTensorRejectsNegativeDimension);
         RegisterTest("tensor_index",
                     TestTensorIndex);
         RegisterTest("tensor_index_wrong_rank",
