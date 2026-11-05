@@ -167,9 +167,7 @@ void Rope(Tensor& q, Tensor& k, int pos, float theta, RopeType rope_type) {
         throw std::runtime_error("Rope: theta must be finite and positive");
     }
 
-    int n_heads = q.shape_[0];
     int head_dim = q.shape_[1];
-    int n_kv_heads = k.shape_[0];
     int k_head_dim = k.shape_[1];
     if (head_dim != k_head_dim) {
         throw std::runtime_error("Rope: q and k head_dim mismatch " +

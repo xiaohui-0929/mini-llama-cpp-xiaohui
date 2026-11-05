@@ -4,12 +4,18 @@
 #include "mini_llama/tensor_and_Ops/tensor.h"
 #include "mini_llama/tensor_and_Ops/ops.h"
 #include "mini_llama/model/model.h"
+#include "mini_llama/tokenizer/tokenizer.h"
 
 // enum class
 using mini_llama::RopeType;
 
 // struct
 using mini_llama::Tensor;
+
+// class
+using mini_llama::AsciiTokenizer;
+using mini_llama::JsonVocabTokenizer;
+using mini_llama::BpeTokenizer;
 
 // function
 using mini_llama::MakeTensor1D;
@@ -24,5 +30,8 @@ using mini_llama::Softmax;
 using mini_llama::Silu;
 using mini_llama::SwiGlu;
 using mini_llama::Rope;
+
+using mini_llama::CreateTokenizer;
+using mini_llama::CreateBpeTokenizer;
 
 #endif  // TESTS_TEST_NAMES_H_
