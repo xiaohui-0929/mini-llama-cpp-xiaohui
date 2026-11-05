@@ -1,4 +1,5 @@
 #include "mini_llama/tokenizer/tokenizer.h"
+#include "utf8_util.h"
 
 #include <algorithm>
 #include <fstream>
@@ -12,26 +13,6 @@ namespace mini_llama {
 /**
  * UTF-8 helpers
  */
-
-static std::string CodepointToUtf8(char32_t cp) {
-    std::string result;
-    if (cp <= 0x7F) {
-        result += static_cast<char>(cp);
-    } else if (cp <= 0x7FF) {
-        result += static_cast<char>(0xC0 | (cp >> 6));
-        result += static_cast<char>(0x80 | (cp & 0x3F));
-    } else if (cp <= 0xFFFF) {
-        result += static_cast<char>(0xE0 | (cp >> 12));
-        result += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
-        result += static_cast<char>(0x80 | (cp & 0x3F));
-    } else {
-        result += static_cast<char>(0xF0 | (cp >> 18));
-        result += static_cast<char>(0x80 | ((cp >> 12) & 0x3F));
-        result += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
-        result += static_cast<char>(0x80 | (cp & 0x3F));
-    }
-    return result;
-}
 
 static std::string NextUtf8Codepoint(const std::string& s, size_t& pos) {
     if (pos >= s.size()) {
@@ -59,6 +40,125 @@ static std::string NextUtf8Codepoint(const std::string& s, size_t& pos) {
     std::string result = s.substr(pos, len);
     pos += len;
     return result;
+}
+
+/**
+ * GPT-2 预切分
+ *
+ * 复现正则:
+ *   's|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+
+ *
+ * 字符分类做了简化 (没有 Unicode 表):
+ *   letter: ASCII 字母, 以及所有非 ASCII 码点
+ *   number: ASCII 数字
+ *   space : ASCII 空白 (' ' \t \n \r \v \f)
+ *   other : 其余字符; 非法 UTF-8 字节按单字节处理
+ * 已知差异: U+00A0、U+3000 等 Unicode 空白与非 ASCII 标点会被当作 letter。
+ */
+
+enum class CharClass { kLetter, kNumber, kSpace, kOther };
+
+static CharClass ClassifyAt(const std::string& s, size_t pos, size_t& len) {
+    unsigned char c = static_cast<unsigned char>(s[pos]);
+    len = 1;
+    if (c < 0x80) {
+        if (std::isalpha(c)) {
+            return CharClass::kLetter;
+        }
+        if (std::isdigit(c)) {
+            return CharClass::kNumber;
+        }
+        if (c == ' ' || (c >= '\t' && c <= '\r')) {
+            return CharClass::kSpace;
+        }
+        return CharClass::kOther;
+    }
+    size_t seq = 0;
+    if ((c & 0xE0) == 0xC0) {
+        seq = 2;
+    } else if ((c & 0xF0) == 0xE0) {
+        seq = 3;
+    } else if ((c & 0xF8) == 0xF0) {
+        seq = 4;
+    }
+    if (seq == 0 || pos + seq > s.size()) {
+        return CharClass::kOther;
+    }
+    len = seq;
+    return CharClass::kLetter;
+}
+
+// s[pos] == '\'' 时, 返回缩写 ('s 't 're 've 'm 'll 'd) 的总长度, 不匹配返回 0
+static size_t MatchContraction(const std::string& s, size_t pos) {
+    static const char* const kSuffixes[] = {"s", "t", "re", "ve", "m", "ll", "d"};
+    for (const char* suffix : kSuffixes) {
+        size_t n = std::strlen(suffix);
+        if (s.compare(pos + 1, n, suffix) == 0 && pos + 1 + n <= s.size()) {
+            return n + 1;
+        }
+    }
+    return 0;
+}
+
+static std::vector<std::string> PreTokenize(const std::string& s) {
+    std::vector<std::string> pieces;
+    const size_t n = s.size();
+    size_t i = 0;
+    while (i < n) {
+        size_t len = 0;
+        CharClass cls = ClassifyAt(s, i, len);
+
+        // 1. 缩写
+        if (s[i] == '\'') {
+            size_t m = MatchContraction(s, i);
+            if (m > 0) {
+                pieces.push_back(s.substr(i, m));
+                i += m;
+                continue;
+            }
+        }
+
+        // 2~4. 可选的一个前导空格 + 同类字符连续段
+        size_t p = i;
+        if (cls == CharClass::kSpace && s[i] == ' ' && i + 1 < n) {
+            size_t next_len = 0;
+            CharClass next_cls = ClassifyAt(s, i + 1, next_len);
+            if (next_cls != CharClass::kSpace) {
+                p = i + 1;
+                cls = next_cls;
+                len = next_len;
+            }
+        }
+        if (cls != CharClass::kSpace) {
+            p += len;
+            while (p < n) {
+                size_t l = 0;
+                if (ClassifyAt(s, p, l) != cls) {
+                    break;
+                }
+                p += l;
+            }
+            pieces.push_back(s.substr(i, p - i));
+            i = p;
+            continue;
+        }
+
+        // 5~6. 空白段: 后面还有非空白时, 留最后一个空白给下一个 piece
+        size_t j = i;
+        size_t last = i;
+        while (j < n) {
+            size_t l = 0;
+            if (ClassifyAt(s, j, l) != CharClass::kSpace) {
+                break;
+            }
+            last = j;
+            j += l;
+        }
+        size_t end = (j < n && last > i) ? last : j;
+        pieces.push_back(s.substr(i, end - i));
+        i = end;
+    }
+    return pieces;
 }
 
 /**
@@ -256,6 +356,12 @@ bool BpeTokenizer::Load(const std::string& vocab_path,
             if (!ParseJsonInt(content, pos, val)) {
                 break;
             }
+            // 如果val解析为负数 说明解析有问题 应该返回失败
+            if (val < 0) {
+                std::cerr << "Invalid negative token id " << val
+                << " for token: " << key << std::endl;
+                return false;
+            }
             // 记录vocab_
             vocab_[key] = val;
 
@@ -365,6 +471,50 @@ bool BpeTokenizer::Load(const std::string& vocab_path,
     return true;
 }
 
+void BpeTokenizer::EncodePiece(const std::string& piece,
+                               std::vector<int>& out) const {
+    // 1.将 piece 按照字节切分
+    // "hello" -> "h" "e" "l" "l" "o"     (ASCII, 5 字节, 5 个元素)
+    // "世界"  -> "ä" "¸" "ĸ" "ç" "ķ" "Į" (6 字节, 6 个元素, 非 2 个)
+    std::vector<std::string> word;
+    word.reserve(piece.size());
+    for (unsigned char c : piece) {
+        word.push_back(b2u_[c]);
+    }
+
+    // 2.应用 BPE 合并
+    // 如
+    // "h" "e" "l" "l" "o" -> "he" "l" "l" "o"
+    // "he" "l" "l" "o" -> "hel" "l" "o"
+    // "hel" "l" "o" -> "hell" "o"
+    // "hell" "o" -> break 跳出merge循环
+    while (word.size() > 1) {
+        int best_rank = std::numeric_limits<int>::max();
+        size_t best_idx = word.size();
+
+        for (size_t i = 0; i + 1 < word.size(); ++i) {
+            auto it = merge_ranks_.find({word[i], word[i + 1]});
+            if (it != merge_ranks_.end() && it->second < best_rank) {
+                best_rank = it->second;
+                best_idx = i;
+            }
+        }
+
+        if (best_idx >= word.size()) {
+            break;
+        }
+
+        word[best_idx] += word[best_idx + 1];
+        word.erase(word.begin() + static_cast<std::ptrdiff_t>(best_idx) + 1);
+    }
+
+    // 3.获取对应的token_id
+    for (const auto& w : word) {
+        auto it = vocab_.find(w);
+        out.push_back(it != vocab_.end() ? it->second : unk_id_);
+    }
+}
+
 std::vector<int> BpeTokenizer::Encode(const std::string& text) const {
     if (text.empty()) {
         return {};
@@ -406,53 +556,9 @@ std::vector<int> BpeTokenizer::Encode(const std::string& text) const {
         std::string segment = text.substr(pos, end - pos);
         pos = end;
 
-        // 1.将文本按照字节切分
-        // "hello" -> "h" "e" "l" "l" "o"     (ASCII, 5 字节, 5 个元素)
-        // "世界"  -> "ä" "¸" "ĸ" "ç" "ķ" "Į" (6 字节, 6 个元素, 非 2 个)
-        std::vector<std::string> word;
-        for (unsigned char c : segment) {
-            if (c >= b2u_.size()) {
-                std::cerr << "ERROR: byte " << static_cast<int>(c) << " >= b2u_ size "
-                          << b2u_.size() << "\n";
-                return {};
-            }
-            word.push_back(b2u_[c]);
-        }
-
-        // 2.应用 BPE 合并
-        // 如
-        // "h" "e" "l" "l" "o" -> "he" "l" "l" "o"
-        // "he" "l" "l" "o" -> "hel" "l" "o"
-        // "hel" "l" "o" -> "hell" "o"
-        // "hell" "o" -> break 跳出merge循环
-        while (word.size() > 1) {
-            int best_rank = std::numeric_limits<int>::max();
-            size_t best_idx = word.size();
-
-            for (size_t i = 0; i + 1 < word.size(); ++i) {
-                auto it = merge_ranks_.find({word[i], word[i + 1]});
-                if (it != merge_ranks_.end() && it->second < best_rank) {
-                    best_rank = it->second;
-                    best_idx = i;
-                }
-            }
-
-            if (best_idx >= word.size()) {
-                break;
-            }
-
-            word[best_idx] += word[best_idx + 1];
-            word.erase(word.begin() + best_idx + 1);
-        }
-
-        // 3.获取对应的token_id
-        for (const auto& w : word) {
-            auto it = vocab_.find(w);
-            if (it != vocab_.end()) {
-                result.push_back(it->second);
-            } else {
-                result.push_back(unk_id_);
-            }
+        // 预切分后, 每个 piece 独立做 BPE, 合并不会跨越 piece 边界
+        for (const std::string& piece : PreTokenize(segment)) {
+            EncodePiece(piece, result);
         }
     }
 

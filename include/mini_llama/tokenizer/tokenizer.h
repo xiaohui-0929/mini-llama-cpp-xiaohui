@@ -133,6 +133,8 @@ private:
 
 private:
     void BuildByteMappings();
+    // 对单个预切分 piece 做字节映射 + BPE 合并 + 查词表, 结果追加到 out
+    void EncodePiece(const std::string& piece, std::vector<int>& out) const;
 };
 
 /**

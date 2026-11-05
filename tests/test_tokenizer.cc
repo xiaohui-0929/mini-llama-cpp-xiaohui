@@ -58,14 +58,18 @@ static TempBpeFiles WriteTempBpeFiles() {
             << "  \"ĸ\": 14,\n"      // 0x96
             << "  \"ç\": 15,\n"      // 0xE7
             << "  \"ķ\": 16,\n"      // 0x95
-            << "  \"Į\": 17\n"       // 0x8C
-            << "  \"ä¸ĸ\": 18\n"
-            << "  \"çķĮ\": 19\n"
+            << "  \"Į\": 17,\n"      // 0x8C
+            << "  \"ä¸ĸ\": 18,\n"
+            << "  \"çķĮ\": 19,\n"
+            << "  \"Ġ\": 20,\n"      // 空格 0x20
+            << "  \"oĠ\": 21\n"
             << "}\n";
     }
     {
         std::ofstream out(files.merges);
-        out << "h e\n"
+        // "o Ġ" 排第一: 若没有预切分, "hello hello" 中的 "o" 与 "Ġ" 会跨词合并
+        out << "o Ġ\n"
+            << "h e\n"
             << "he l\n"
             << "hel l\n"
             << "hell o\n"
@@ -242,6 +246,62 @@ static bool TestJsonVocabMissingFile() {
     return true;
 }
 
+static bool TestJsonVocabUnicodeEscape() {
+    const auto path = std::filesystem::temp_directory_path() /
+        ("mini_llama_json_unicode_" +
+         std::to_string(std::chrono::steady_clock::now()
+                            .time_since_epoch().count()) + ".json");
+    {
+        std::ofstream out(path);
+        out << "[\n"
+            << "  {\"id\": 0, \"content\": \"<unk>\", \"special\": true},\n"
+            << "  {\"id\": 1, \"content\": \"<bos>\", \"special\": true},\n"
+            << "  {\"id\": 2, \"content\": \"<eos>\", \"special\": true},\n"
+            << "  {\"id\": 3, \"content\": \"\\u4e16\"},\n"
+            << "  {\"id\": 4, \"content\": \"\\u754c\"}\n"
+            << "]\n";
+    }
+    bool ok = true;
+    try {
+        JsonVocabTokenizer tok(path.string());
+        ok = ok && tok.DecodeToken(3) == "世";
+        ok = ok && tok.DecodeToken(4) == "界";
+        auto ids = tok.Encode("世界");
+        ok = ok && ids.size() == 3 && ids[1] == 3 && ids[2] == 4;
+    } catch (const std::exception&) {
+        ok = false;
+    }
+    std::error_code ec;
+    std::filesystem::remove(path, ec);
+    MINI_LLAMA_ASSERT_TRUE(ok);
+    return true;
+}
+
+static bool TestJsonVocabRejectsDuplicateId() {
+    const auto path = std::filesystem::temp_directory_path() /
+        ("mini_llama_json_dup_id_" +
+         std::to_string(std::chrono::steady_clock::now()
+                            .time_since_epoch().count()) + ".json");
+    {
+        std::ofstream out(path);
+        out << "[\n"
+            << "  {\"id\": 0, \"content\": \"<unk>\", \"special\": true},\n"
+            << "  {\"id\": 3, \"content\": \"a\"},\n"
+            << "  {\"id\": 3, \"content\": \"b\"}\n"
+            << "]\n";
+    }
+    bool threw = false;
+    try {
+        JsonVocabTokenizer tok(path.string());
+    } catch (const std::runtime_error&) {
+        threw = true;
+    }
+    std::error_code ec;
+    std::filesystem::remove(path, ec);
+    MINI_LLAMA_ASSERT_TRUE(threw);
+    return true;
+}
+
 /**
  * BpeTokenizer
  */
@@ -269,6 +329,24 @@ static bool TestBpeEncodeDecodeAndSpecialToken() {
     MINI_LLAMA_ASSERT_EQ(world_chinese[0], 18);
     MINI_LLAMA_ASSERT_EQ(world_chinese[1], 19);
     MINI_LLAMA_ASSERT_TRUE(tok->Decode(world_chinese) == "世界");
+
+    RemoveTempBpeFiles(files);
+    return true;
+}
+
+static bool TestBpePreTokenizeRespectsWordBoundary() {
+    TempBpeFiles files = WriteTempBpeFiles();
+    auto tok = CreateBpeTokenizer(files.vocab.string(), files.merges.string(),
+                                  files.special.string());
+    MINI_LLAMA_ASSERT_TRUE(tok != nullptr);
+
+    // 预切分为 "hello" + " hello", 合并不能跨词, 不应出现 "oĠ"(21)
+    std::vector<int> ids = tok->Encode("hello hello");
+    MINI_LLAMA_ASSERT_EQ(ids.size(), 3u);
+    MINI_LLAMA_ASSERT_EQ(ids[0], 7);
+    MINI_LLAMA_ASSERT_EQ(ids[1], 20);
+    MINI_LLAMA_ASSERT_EQ(ids[2], 7);
+    MINI_LLAMA_ASSERT_TRUE(tok->Decode(ids) == "hello hello");
 
     RemoveTempBpeFiles(files);
     return true;
@@ -325,8 +403,13 @@ static struct TokenizerTestRegistrar {
                     TestJsonVocabMatchesAscii);
         RegisterTest("jsonvocab_missing_file", 
                     TestJsonVocabMissingFile);
+        RegisterTest("jsonvocab_unicode_escape", TestJsonVocabUnicodeEscape);
+        RegisterTest("jsonvocab_rejects_duplicate_id",
+                    TestJsonVocabRejectsDuplicateId);
         RegisterTest("bpe_encode_decode_and_special_token",
                     TestBpeEncodeDecodeAndSpecialToken);
+        RegisterTest("bpe_pretokenize_respects_word_boundary",
+                    TestBpePreTokenizeRespectsWordBoundary);
         RegisterTest("factory_uses_json_when_exists",
                     TestFactoryUsesJsonWhenExists);
         RegisterTest("factory_falls_back_to_ascii", 

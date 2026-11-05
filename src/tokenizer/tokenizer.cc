@@ -28,7 +28,7 @@ std::string AsciiTokenizer::DecodeToken(int token) const {
     if (token == unk_id()) {
         return "<unk>";
     }
-    if (token >= kVocabSize) {
+    if (token < 0 || token >= kVocabSize) {
         return "<unk>";
     }
     if (token < 32 || token == 127) {

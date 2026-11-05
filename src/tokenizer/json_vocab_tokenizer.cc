@@ -1,10 +1,12 @@
 #include "mini_llama/tokenizer/tokenizer.h"
+#include "utf8_util.h"
 
 #include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <memory>
 #include <iostream>
+#include <unordered_set>
 
 namespace mini_llama {
 
@@ -34,15 +36,11 @@ static std::string ParseJsonString(const std::string& content, size_t& pos) {
             } else if (next == '"') {
                 result += '"';
             } else if (next == 'u' && pos + 5 < content.size()) {
-                // Simple \uXXXX escape (4 hex digits)
+                // \uXXXX 转义 (4 位十六进制), 按码点编码为 UTF-8,
+                // 这样 世 能还原为 "世", 而不是 '?'
                 std::string hex = content.substr(pos + 2, 4);
                 unsigned int codepoint = std::stoul(hex, nullptr, 16);
-                if (codepoint <= 0x7F) {
-                result += static_cast<char>(codepoint);
-                } else {
-                // For codepoints outside ASCII, just append as-is or use '?'
-                result += '?';
-                }
+                result += CodepointToUtf8(static_cast<char32_t>(codepoint));
                 pos += 6;
                 continue;
             } else {
@@ -114,6 +112,7 @@ JsonVocabTokenizer::JsonVocabTokenizer(const std::string& vocab_path) {
     ++pos;
 
     int max_id = -1;
+    std::unordered_set<int> seen_ids;
     // 解析Json
     while (pos < content.size()) {
         // 查找下一个起始位置 '{'
@@ -193,6 +192,11 @@ JsonVocabTokenizer::JsonVocabTokenizer(const std::string& vocab_path) {
         }
         if (entry.id < 0) {
             throw std::runtime_error("vocab entry id must be non-negative");
+        }
+        // id 重复会让 content_to_id_ 与 id_to_entry_ 对不上, 加载时直接拒绝
+        if (!seen_ids.insert(entry.id).second) {
+            throw std::runtime_error("duplicate vocab id: " +
+                                     std::to_string(entry.id));
         }
         // 确定标志信息
         if (entry.content == "<bos>") {
