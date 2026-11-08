@@ -39,6 +39,10 @@ set(MINI_LLAMA_CORE_SOURCES
     src/tokenizer/tokenizer.cc
     src/tokenizer/json_vocab_tokenizer.cc
     src/tokenizer/bpe_tokenizer.cc
+    src/runtime/kv_cache.cc
+    src/runtime/context.cc
+    src/runtime/radix_tree.cc
+    src/runtime/request_context.cc
 )
 
 # --- Main executable ---
@@ -58,6 +62,9 @@ set(TEST_SOURCES
     tests/test_tensor.cc
     tests/test_ops.cc
     tests/test_tokenizer.cc
+    tests/test_kv_cache.cc
+    tests/test_radix_tree.cc
+    tests/test_request_context.cc
 )
 
 add_executable(mini-llama-tests ${TEST_SOURCES})
