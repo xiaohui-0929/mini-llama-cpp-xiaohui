@@ -47,7 +47,6 @@ third_party/*/
 # --- Model weights (large binaries, keep dirs tracked) ---
 *.gguf
 *.ggml
-*.bin
 *.safetensors
 *.pt
 *.pth
