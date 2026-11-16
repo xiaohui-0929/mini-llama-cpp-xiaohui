@@ -9,6 +9,9 @@
 #include "mini_llama/runtime/context.h"
 #include "mini_llama/runtime/radix_tree.h"
 #include "mini_llama/runtime/request_context.h"
+#include "mini_llama/model/loader.h"
+#include "mini_llama/forward/batch.h"
+#include "mini_llama/forward/forward.h"
 
 // enum class
 using mini_llama::RopeType;
@@ -19,6 +22,8 @@ using mini_llama::KvCache;
 using mini_llama::MiniLlamaModel;
 using mini_llama::MiniLlamaContext;
 using mini_llama::RequestContext;
+using mini_llama::ModelManifest;
+using mini_llama::MiniBatch;
 
 // class
 using mini_llama::AsciiTokenizer;
@@ -49,5 +54,11 @@ using mini_llama::StartRequest;
 using mini_llama::FormatRequestTraceSummary;
 using mini_llama::FormatRequestTraceEvents;
 
+using mini_llama::ParseManifest;
+using mini_llama::LoadModel;
+using mini_llama::InspectModel;
+
+using mini_llama::ForwardToken;
+using mini_llama::ForwardBatch;
 
 #endif  // TESTS_TEST_NAMES_H_

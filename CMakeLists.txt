@@ -43,6 +43,9 @@ set(MINI_LLAMA_CORE_SOURCES
     src/runtime/context.cc
     src/runtime/radix_tree.cc
     src/runtime/request_context.cc
+    src/model/loader.cc
+    src/forward/forward.cc
+    src/forward/batch.cc
 )
 
 # --- Main executable ---
@@ -65,6 +68,9 @@ set(TEST_SOURCES
     tests/test_kv_cache.cc
     tests/test_radix_tree.cc
     tests/test_request_context.cc
+    tests/test_loader.cc
+    tests/test_batch.cc
+    tests/test_forward.cc
 )
 
 add_executable(mini-llama-tests ${TEST_SOURCES})
