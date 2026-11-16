@@ -272,6 +272,18 @@ static bool TestLoaderRejectsTrailingWeightBytes() {
     return true;
 }
 
+/**
+ * 测试n_heads为0时 是否正确抛出异常
+ */
+static bool TestLoaderRejectsHeadsZero() {
+    std::string json = ReadTextFile("models/tiny/model.json");
+    MINI_LLAMA_ASSERT_TRUE(
+        ReplaceOnce(json, "\"n_heads\": 4", "\"n_heads\": 0"));
+    MINI_LLAMA_ASSERT_TRUE(
+        ParseManifestFails(json, "heads_zero.json"));
+    return true;
+}
+
 static struct LoaderTestRegistrar {
     LoaderTestRegistrar() {
         RegisterTest("loader_manifest_parses_metadata",
@@ -294,6 +306,8 @@ static struct LoaderTestRegistrar {
                     TestLoaderRejectsNonfiniteFloatConfig);
         RegisterTest("loader_rejects_trailing_weight_bytes",
                     TestLoaderRejectsTrailingWeightBytes);
+        RegisterTest("loader_rejects_heads_zero",
+                    TestLoaderRejectsHeadsZero);
     }
     
 } loader_test_registrar;

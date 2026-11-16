@@ -220,6 +220,66 @@ static bool TestForwardBatchMismatchedSizesRejected() {
     return true;
 }
 
+/**
+ * 检查传入的token越界时 是否正确抛出异常 且context未被修改
+ */
+static bool TestForwardBatchTokenOutOfRangeRejected() {
+    MiniLlamaModel model =
+        LoadModel(TestDataPath("models/tiny/model.json"), TestDataPath("models/tiny/model.bin"));
+    if (!model.loaded) {
+        MINI_LLAMA_ASSERT_FAIL("failed to load model");
+    }
+
+    MiniLlamaContext ctx(&model);
+    MiniLlamaContext pristine(&model);
+    MiniBatch batch;
+    batch.tokens = {1, 128};
+    batch.positions = {1, 2};
+    try {
+        ForwardBatch(ctx, model, batch);
+        MINI_LLAMA_ASSERT_FAIL("expected exception for out_of_range");
+    } catch (const std::out_of_range&) {
+        // 校验在写入前完成 context不应留下本批任何token的状态
+        MINI_LLAMA_ASSERT_EQ(ctx.token_history.size(), 0);
+        MINI_LLAMA_ASSERT_EQ(ctx.pos, 0);
+        MINI_LLAMA_ASSERT_EQ(ctx.n_prefill_tokens, 0);
+        MINI_LLAMA_ASSERT_EQ(ctx.n_decode_tokens, 0);
+        MINI_LLAMA_ASSERT_EQ(ctx.kv_cache.keys.data_ == pristine.kv_cache.keys.data_, true);
+        MINI_LLAMA_ASSERT_EQ(ctx.kv_cache.values.data_ == pristine.kv_cache.values.data_, true);
+    }
+    return true;
+}
+
+/**
+ * 检查传入的position越界时 是否正确抛出异常 且context未被修改
+ */
+static bool TestForwardBatchPositionOutOfRangeRejected() {
+    MiniLlamaModel model =
+        LoadModel(TestDataPath("models/tiny/model.json"), TestDataPath("models/tiny/model.bin"));
+    if (!model.loaded) {
+        MINI_LLAMA_ASSERT_FAIL("failed to load model");
+    }
+
+    MiniLlamaContext ctx(&model);
+    MiniLlamaContext pristine(&model);
+    MiniBatch batch;
+    batch.tokens = {1, 2};
+    batch.positions = {1, 128};
+    try {
+        ForwardBatch(ctx, model, batch);
+        MINI_LLAMA_ASSERT_FAIL("expected exception for out_of_range");
+    } catch (const std::out_of_range&) {
+        // 校验在写入前完成 context不应留下本批任何token的状态
+        MINI_LLAMA_ASSERT_EQ(ctx.token_history.size(), 0);
+        MINI_LLAMA_ASSERT_EQ(ctx.pos, 0);
+        MINI_LLAMA_ASSERT_EQ(ctx.n_prefill_tokens, 0);
+        MINI_LLAMA_ASSERT_EQ(ctx.n_decode_tokens, 0);
+        MINI_LLAMA_ASSERT_EQ(ctx.kv_cache.keys.data_ == pristine.kv_cache.keys.data_, true);
+        MINI_LLAMA_ASSERT_EQ(ctx.kv_cache.values.data_ == pristine.kv_cache.values.data_, true);
+    }
+    return true;
+}
+
 static struct BatchTestRegistrar {
     BatchTestRegistrar() {
         RegisterTest("batch_single", 
@@ -240,6 +300,10 @@ static struct BatchTestRegistrar {
                     TestForwardBatchEmptyRejected);
         RegisterTest("forward_batch_mismatched_sizes_rejected",
                     TestForwardBatchMismatchedSizesRejected);
+        RegisterTest("forward_batch_token_out_of_range_rejected",
+                    TestForwardBatchTokenOutOfRangeRejected);
+        RegisterTest("forward_batch_position_out_of_range_rejected",
+                    TestForwardBatchPositionOutOfRangeRejected);
     }
 
 } batch_test_registrar;

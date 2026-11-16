@@ -1,5 +1,7 @@
 #include "mini_llama/forward/batch.h"
 
+#include <stdexcept>
+
 #include "mini_llama/runtime/context.h"
 #include "mini_llama/forward/forward.h"
 
@@ -36,6 +38,17 @@ Tensor ForwardBatch(MiniLlamaContext& ctx, const MiniLlamaModel& model,
         throw std::runtime_error(
             "ForwardBatch: tokens and positions size mismatch"
         );
+    }
+
+    // 先校验整个batch 再写入Context 避免中途失败后残留部分token的历史和KV cache
+    const ModelConfig& config = model.config;
+    for (int i = 0; i < batch.num_tokens(); ++i) {
+        if (batch.tokens[i] < 0 || batch.tokens[i] >= config.vocab_size) {
+            throw std::out_of_range("ForwardBatch: token id out of range");
+        }
+        if (batch.positions[i] < 0 || batch.positions[i] >= config.max_seq_len) {
+            throw std::out_of_range("ForwardBatch: position out of range");
+        }
     }
 
     Tensor logits;

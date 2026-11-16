@@ -179,6 +179,9 @@ static ModelConfig ParseConfigJson(const std::string& content) {
     config.max_seq_len = ParseRequiredInt(content, "max_seq_len");
     config.rope_theta = ParseRequiredFloat(content, "rope_theta");
     config.rms_norm_eps = ParseRequiredFloat(content, "rms_norm_eps");
+    if (config.n_heads <= 0) {
+        throw std::runtime_error("n_heads must be positive");
+    }
     config.head_dim = config.dim / config.n_heads;
 
     ValidateConfig(config);
@@ -633,6 +636,18 @@ static Tensor LoadTensorByName(std::ifstream& wf,
 }
 
 /**
+ * 根据名称加载可选的Tensor 不存在时返回空Tensor
+ */
+static Tensor LoadOptionalTensorByName(
+    std::ifstream& wf, const std::map<std::string, TensorInfo>& tensor_map,
+    const std::string& name) {
+    if (tensor_map.find(name) == tensor_map.end()) {
+        return Tensor();
+    }
+    return LoadTensorByName(wf, tensor_map, name);
+}
+
+/**
  * 将权重信息解析进入Model
  */
 static void ParseWeightInfoToModel(MiniLlamaModel& model, 
@@ -653,6 +668,12 @@ static void ParseWeightInfoToModel(MiniLlamaModel& model,
             LoadTensorByName(wf, tensor_map, prefix + "wk");
         lw.wv =
             LoadTensorByName(wf, tensor_map, prefix + "wv");
+        lw.bq =
+            LoadOptionalTensorByName(wf, tensor_map, prefix + "bq");
+        lw.bk =
+            LoadOptionalTensorByName(wf, tensor_map, prefix + "bk");
+        lw.bv =
+            LoadOptionalTensorByName(wf, tensor_map, prefix + "bv");
         lw.wo = 
             LoadTensorByName(wf, tensor_map, prefix + "wo");
         lw.ffn_norm = 
