@@ -4,6 +4,12 @@ project(mini-llama CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# clang 默认省略标准库类型的完整调试信息，会导致 gdb 里 std::string 显示为
+# <incomplete type>。仅在 Debug 构建下开启完整调试信息。
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options($<$<CONFIG:Debug>:-fstandalone-debug>)
+endif()
+
 # --- 编译警告 ---
 # -Wmissing-declarations: 定义在源文件里的非 static 函数必须有对应声明，
 #                         可提前暴露头文件声明与定义的签名/名字不一致（如拼写错误）。
@@ -46,6 +52,13 @@ set(MINI_LLAMA_CORE_SOURCES
     src/model/loader.cc
     src/forward/forward.cc
     src/forward/batch.cc
+    src/sampler/sampler.cc
+    src/chat/chat.cc
+    src/chat/prompt_builder.cc
+    src/chat/terminal.cc
+    src/CLI/parsing_helper.cc
+    src/CLI/run_mode.cc
+    src/CLI/generate_mode.cc
 )
 
 # --- Main executable ---
@@ -71,6 +84,8 @@ set(TEST_SOURCES
     tests/test_loader.cc
     tests/test_batch.cc
     tests/test_forward.cc
+    tests/test_sampler.cc
+    tests/test_chat.cc
 )
 
 add_executable(mini-llama-tests ${TEST_SOURCES})

@@ -12,6 +12,10 @@
 #include "mini_llama/model/loader.h"
 #include "mini_llama/forward/batch.h"
 #include "mini_llama/forward/forward.h"
+#include "mini_llama/sampler/sampler.h"
+#include "mini_llama/chat/chat.h"
+#include "mini_llama/chat/prompt_builder.h"
+#include "mini_llama/chat/terminal.h"
 
 // enum class
 using mini_llama::RopeType;
@@ -24,12 +28,18 @@ using mini_llama::MiniLlamaContext;
 using mini_llama::RequestContext;
 using mini_llama::ModelManifest;
 using mini_llama::MiniBatch;
+using mini_llama::SamplingParams;
+using mini_llama::ChatMessage;
 
 // class
 using mini_llama::AsciiTokenizer;
 using mini_llama::JsonVocabTokenizer;
 using mini_llama::BpeTokenizer;
 using mini_llama::RadixTree;
+using mini_llama::MiniSampler;
+using mini_llama::ChatSession;
+using mini_llama::PromptBuilder;
+using mini_llama::Terminal;
 
 // function
 using mini_llama::MakeTensor1D;
