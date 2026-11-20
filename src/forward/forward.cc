@@ -40,7 +40,7 @@ static void ValidateForwardInputs(const MiniLlamaContext& ctx,
             "ForwardToken layer count does not match model config"
         );
     }
-    if (model.token_embedding.data_.size() <
+    if (model.token_embedding.data.size() <
         static_cast<size_t>(config.vocab_size * config.dim)) {
         throw std::runtime_error(
             "ForwardToken token embedding tensor is smaller than config"
@@ -61,19 +61,19 @@ static void RequireShape(const Tensor& t, const std::vector<int>& expected,
  */
 static Tensor AddOptionalBias(const Tensor& x, const Tensor& bias,
                               const char* caller) {
-    if (bias.data_.empty()) {
+    if (bias.data.empty()) {
         return x;
     }
 
     if (x.num_dims() != 1 || bias.num_dims() != 1 ||
-        x.shape_[0] != bias.shape_[0]) {
+        x.shape[0] != bias.shape[0]) {
         throw std::runtime_error(std::string(caller) +
                                  ": bias shape mismatch x=" + x.ShapeStringShort() +
                                  " bias=" + bias.ShapeStringShort());
     }
 
     Tensor y = x;
-    for (int i = 0; i < x.shape_[0]; ++i) {
+    for (int i = 0; i < x.shape[0]; ++i) {
         y[i] += bias[i];
     }
     return y;
@@ -130,14 +130,14 @@ static Tensor ForwardSwiGlu(const MiniLlamaModel& model, const Tensor& gate,
  */
 static Tensor ForwardAdd(const MiniLlamaModel& model, const Tensor& a,
                          const Tensor& b) {
-    if (a.shape_ != b.shape_) {
+    if (a.shape != b.shape) {
         throw std::runtime_error("forward_add: shape mismatch " +
                                  a.ShapeStringShort() + " vs " +
                                  b.ShapeStringShort());
     }
-    Tensor result(a.shape_, 0.0f);
+    Tensor result(a.shape, 0.0f);
     for (size_t i = 0; i < a.size(); ++i) {
-        result.data_[i] = a.data_[i] + b.data_[i];
+        result.data[i] = a.data[i] + b.data[i];
     }
     return result;
 }
@@ -165,7 +165,7 @@ static Tensor EmbedToken(const MiniLlamaModel& model, int token_id) {
     int dim = model.config.dim;
     Tensor result({dim}, 0.0f);
 
-    memcpy(result.data_.data(), &model.token_embedding.data_[token_id * dim],
+    memcpy(result.data.data(), &model.token_embedding.data[token_id * dim],
            dim * sizeof(float)); 
 
     return result;
@@ -204,13 +204,13 @@ static Tensor AttentionForward(const MiniLlamaModel& model, const Tensor& q,
             const float* k_ptr = kv_cache.KeyPtr(layer, t, kv_head);
             float dot = 0.0f;
             for (int d = 0; d < head_dim; ++d) {
-                dot += q.data_[h * head_dim + d] * k_ptr[d];
+                dot += q.data[h * head_dim + d] * k_ptr[d];
             }
             scores_data[t] = dot * scale;
         }
         // 1维张量scores 代表当前head下 本pos的token对历史token的QK得分
         Tensor scores({pos + 1}, 0.0f);
-        scores.data_ = std::move(scores_data);
+        scores.data = std::move(scores_data);
         // 将得分转为概率分布
         Tensor probs = ForwardSoftmax(model, scores);
 
@@ -220,9 +220,9 @@ static Tensor AttentionForward(const MiniLlamaModel& model, const Tensor& q,
             float val = 0.0f;
             for (int t = 0; t <= pos; ++t) {
                 const float* v_ptr = kv_cache.ValuePtr(layer, t, kv_head);
-                val += probs.data_[t] * v_ptr[d];
+                val += probs.data[t] * v_ptr[d];
             }
-            attn_out.data_[h * head_dim + d] = val;
+            attn_out.data[h * head_dim + d] = val;
         }
     };
 

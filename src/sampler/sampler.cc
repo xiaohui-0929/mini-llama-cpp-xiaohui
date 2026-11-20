@@ -19,7 +19,7 @@ void ValidateLogits(const Tensor& logits) {
         throw std::runtime_error("sampler: cannot sample from empty logits");
     }
     // 检查每个位置数值的有效性
-    for (const auto& value : logits.data_) {
+    for (const auto& value : logits.data) {
         if (!std::isfinite(value)) {
             throw std::runtime_error("sampler: logits must be finite");
         }
@@ -131,7 +131,7 @@ int MiniSampler::SampleTemperature(const Tensor& logits, float temperature) {
     std::vector<std::pair<float, int>> candidates;
     candidates.reserve(logits.size());
     for (size_t i = 0; i < logits.size(); ++i) {
-        candidates.emplace_back(logits.data_[i], static_cast<int>(i));
+        candidates.emplace_back(logits.data[i], static_cast<int>(i));
     }
     return SampleFromCandidates(candidates, temperature, rng_);
 }
@@ -159,7 +159,7 @@ int MiniSampler::SampleTopK(const Tensor& logits, float temperature, int top_k) 
     std::vector<std::pair<float, int>> candidates;
     candidates.reserve(logits.size());
     for (size_t i = 0; i < logits.size(); ++i) {
-        candidates.emplace_back(logits.data_[i], static_cast<int>(i));
+        candidates.emplace_back(logits.data[i], static_cast<int>(i));
     }
     // sort是不稳定排序 候选词相等的情况下需要维持原本的相对位置不变
     std::sort(candidates.begin(), candidates.end(),

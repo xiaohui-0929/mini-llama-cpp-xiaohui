@@ -34,8 +34,8 @@ static void DumpLogits(const Tensor& logits, const std::string& path) {
     if (!out.is_open()) {
         throw std::runtime_error("failed to open logits dump file: " + path);
     }
-    out.write(reinterpret_cast<const char*>(logits.data_.data()),
-              static_cast<std::streamsize>(logits.data_.size() * sizeof(float)));
+    out.write(reinterpret_cast<const char*>(logits.data.data()),
+              static_cast<std::streamsize>(logits.data.size() * sizeof(float)));
     if (!out.good()) {
         throw std::runtime_error("failed to write logits to: " + path);
     }
