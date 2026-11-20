@@ -9,9 +9,9 @@ static bool TestTensorShapeAndSize() {
     MINI_LLAMA_ASSERT_EQ(t1.num_dims(), 3);
     MINI_LLAMA_ASSERT_EQ(t1.size(), 24);
     MINI_LLAMA_ASSERT_EQ(t1.num_elements(), 24);
-    MINI_LLAMA_ASSERT_EQ(t1.shape_[0], 2);
-    MINI_LLAMA_ASSERT_EQ(t1.shape_[1], 3);
-    MINI_LLAMA_ASSERT_EQ(t1.shape_[2], 4);
+    MINI_LLAMA_ASSERT_EQ(t1.shape[0], 2);
+    MINI_LLAMA_ASSERT_EQ(t1.shape[1], 3);
+    MINI_LLAMA_ASSERT_EQ(t1.shape[2], 4);
     return true;
 }
 
@@ -19,7 +19,7 @@ static bool TestTensorFill() {
     Tensor t({10}, 3.14f);
     MINI_LLAMA_ASSERT_EQ(t.size(), 10);
     for (size_t i = 0; i < t.size(); ++i) {
-        MINI_LLAMA_ASSERT_NEAR(t.data_[i], 3.14f, 1e-6f);
+        MINI_LLAMA_ASSERT_NEAR(t.data[i], 3.14f, 1e-6f);
     }
     return true;
 }
@@ -122,12 +122,12 @@ static bool TestTensor1dAccess() {
 static bool TestMakeTensorHelpers() {
     auto t1 = MakeTensor1D(10, 1.0f);
     MINI_LLAMA_ASSERT_EQ(t1.num_dims(), 1);
-    MINI_LLAMA_ASSERT_EQ(t1.shape_[0], 10);
+    MINI_LLAMA_ASSERT_EQ(t1.shape[0], 10);
 
     auto t2 = MakeTensor2D(3, 4, 1.0f);
     MINI_LLAMA_ASSERT_EQ(t2.num_dims(), 2);
-    MINI_LLAMA_ASSERT_EQ(t2.shape_[0], 3);
-    MINI_LLAMA_ASSERT_EQ(t2.shape_[1], 4);
+    MINI_LLAMA_ASSERT_EQ(t2.shape[0], 3);
+    MINI_LLAMA_ASSERT_EQ(t2.shape[1], 4);
 
     auto t3 = MakeTensor3D(2, 3, 4, 1.0f);
     MINI_LLAMA_ASSERT_EQ(t3.num_dims(), 3);
@@ -264,8 +264,8 @@ static bool TestTensorReshapeCheckedPass() {
     }
     Tensor r = t.ReshapeChecked({3, 2}, "TensorReshpae");
     MINI_LLAMA_ASSERT_EQ(r.num_dims(), 2);
-    MINI_LLAMA_ASSERT_EQ(r.shape_[0], 3);
-    MINI_LLAMA_ASSERT_EQ(r.shape_[1], 2);
+    MINI_LLAMA_ASSERT_EQ(r.shape[0], 3);
+    MINI_LLAMA_ASSERT_EQ(r.shape[1], 2);
     MINI_LLAMA_ASSERT_NEAR(r.At2(0, 0), 0.0f, 1e-6f);
     MINI_LLAMA_ASSERT_NEAR(r.At2(1, 1), 3.0f, 1e-6f);
     MINI_LLAMA_ASSERT_NEAR(r.At2(2, 1), 5.0f, 1e-6f);

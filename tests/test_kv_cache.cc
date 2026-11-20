@@ -4,13 +4,13 @@
 static bool TestKvCacheConstructsExpectedStorageShape() {
     KvCache cache(2, 8, 4, 8);
 
-    MINI_LLAMA_ASSERT_TRUE(cache.keys.shape_ == std::vector<int>({2, 8, 4, 8}));
-    MINI_LLAMA_ASSERT_TRUE(cache.values.shape_ == std::vector<int>({2, 8, 4, 8}));
+    MINI_LLAMA_ASSERT_TRUE(cache.keys.shape == std::vector<int>({2, 8, 4, 8}));
+    MINI_LLAMA_ASSERT_TRUE(cache.values.shape == std::vector<int>({2, 8, 4, 8}));
     MINI_LLAMA_ASSERT_EQ(cache.keys.size(), 512);
     MINI_LLAMA_ASSERT_EQ(cache.values.size(), 512);
     for (size_t i = 0; i < cache.keys.size(); ++i) {
-        MINI_LLAMA_ASSERT_NEAR(cache.keys.data_[i], 0.0f, 1e-6f);
-        MINI_LLAMA_ASSERT_NEAR(cache.values.data_[i], 0.0f, 1e-6f);
+        MINI_LLAMA_ASSERT_NEAR(cache.keys.data[i], 0.0f, 1e-6f);
+        MINI_LLAMA_ASSERT_NEAR(cache.values.data[i], 0.0f, 1e-6f);
     }
     return true;
 }
@@ -135,9 +135,9 @@ static bool TestContextInitializesCacheFromModelConfig() {
     MINI_LLAMA_ASSERT_TRUE(ctx.token_history.empty());
     MINI_LLAMA_ASSERT_EQ(ctx.n_prefill_tokens, 0);
     MINI_LLAMA_ASSERT_EQ(ctx.n_decode_tokens, 0);
-    MINI_LLAMA_ASSERT_TRUE(ctx.kv_cache.keys.shape_ ==
+    MINI_LLAMA_ASSERT_TRUE(ctx.kv_cache.keys.shape ==
                             std::vector<int>({3, 16, 2, 5}));
-    MINI_LLAMA_ASSERT_TRUE(ctx.kv_cache.values.shape_ ==
+    MINI_LLAMA_ASSERT_TRUE(ctx.kv_cache.values.shape ==
                             std::vector<int>({3, 16, 2, 5}));
     return true;
 }

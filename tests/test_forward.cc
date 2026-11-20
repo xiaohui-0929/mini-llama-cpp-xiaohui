@@ -26,7 +26,7 @@ static bool TestForwardTokenProducesLogitShape() {
     ctx.pos = 0;
     Tensor logits = ForwardToken(ctx, model, 1);  // BOS token
     MINI_LLAMA_ASSERT_EQ(logits.num_dims(), 1);
-    MINI_LLAMA_ASSERT_EQ(logits.shape_[0], model.config.vocab_size);
+    MINI_LLAMA_ASSERT_EQ(logits.shape[0], model.config.vocab_size);
     return true;
 }
 
@@ -73,7 +73,7 @@ static bool TestPositionIncrementsCorrectly() {
     // Forward token at pos 1
     ctx.pos = 1;
     Tensor logits = ForwardToken(ctx, model, 2);
-    MINI_LLAMA_ASSERT_EQ(logits.shape_[0], model.config.vocab_size);
+    MINI_LLAMA_ASSERT_EQ(logits.shape[0], model.config.vocab_size);
     return true;
 }
 

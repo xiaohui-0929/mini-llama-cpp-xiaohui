@@ -17,8 +17,8 @@ static bool TestMatmulIdentity() {
     b[2] = 3.0f;
     b[3] = 4.0f;
     Tensor c = Matmul(a, b);
-    MINI_LLAMA_ASSERT_EQ(c.shape_[0], 2);
-    MINI_LLAMA_ASSERT_EQ(c.shape_[1], 2);
+    MINI_LLAMA_ASSERT_EQ(c.shape[0], 2);
+    MINI_LLAMA_ASSERT_EQ(c.shape[1], 2);
     MINI_LLAMA_ASSERT_NEAR(c[0], 1.0f, 1e-5f);
     MINI_LLAMA_ASSERT_NEAR(c[1], 2.0f, 1e-5f);
     MINI_LLAMA_ASSERT_NEAR(c[2], 3.0f, 1e-5f);
@@ -61,8 +61,8 @@ static bool TestMatmulRectangular() {
         b[i] = static_cast<float>(i);
     }
     Tensor c = Matmul(a, b);
-    MINI_LLAMA_ASSERT_EQ(c.shape_[0], 2);
-    MINI_LLAMA_ASSERT_EQ(c.shape_[1], 4);
+    MINI_LLAMA_ASSERT_EQ(c.shape[0], 2);
+    MINI_LLAMA_ASSERT_EQ(c.shape[1], 4);
     // c[0,0] = 1*0 + 2*4 + 3*8 = 0 + 8 + 24 = 32
     MINI_LLAMA_ASSERT_NEAR(c.At2(0, 0), 32.0f, 1e-5f);
     // c[1,0] = 4*0 + 5*4 + 6*8 = 0 + 20 + 48 = 68
@@ -97,7 +97,7 @@ static bool TestLinear1d() {
     weight[8] = 3.0f;
     Tensor y = Linear(x, weight);
     MINI_LLAMA_ASSERT_EQ(y.num_dims(), 1);
-    MINI_LLAMA_ASSERT_EQ(y.shape_[0], 3);
+    MINI_LLAMA_ASSERT_EQ(y.shape[0], 3);
     MINI_LLAMA_ASSERT_NEAR(y[0], 2.0f, 1e-5f);
     MINI_LLAMA_ASSERT_NEAR(y[1], 2.0f, 1e-5f);
     MINI_LLAMA_ASSERT_NEAR(y[2], 9.0f, 1e-5f);
@@ -118,8 +118,8 @@ static bool TestLinear2d() {
     weight[5] = 0.0f;
     Tensor y = Linear(x, weight);
     MINI_LLAMA_ASSERT_EQ(y.num_dims(), 2);
-    MINI_LLAMA_ASSERT_EQ(y.shape_[0], 1);
-    MINI_LLAMA_ASSERT_EQ(y.shape_[1], 2);
+    MINI_LLAMA_ASSERT_EQ(y.shape[0], 1);
+    MINI_LLAMA_ASSERT_EQ(y.shape[1], 2);
     MINI_LLAMA_ASSERT_NEAR(y[0], 1.0f, 1e-5f);
     MINI_LLAMA_ASSERT_NEAR(y[1], 2.0f, 1e-5f);
     return true;
@@ -144,7 +144,7 @@ static bool TestRmsNormUnit() {
     Tensor x({4}, 1.0f);
     Tensor w({4}, 1.0f);
     Tensor y = RmsNorm(x, w, 1e-5f);
-    MINI_LLAMA_ASSERT_EQ(y.shape_[0], 4);
+    MINI_LLAMA_ASSERT_EQ(y.shape[0], 4);
     for (int i = 0; i < 4; ++i) {
         MINI_LLAMA_ASSERT_NEAR(y[i], 1.0f, 1e-4f);
     }
@@ -194,7 +194,7 @@ static bool TestSoftmax() {
     x[1] = 2.0f;
     x[2] = 3.0f;
     Tensor y = Softmax(x);
-    MINI_LLAMA_ASSERT_EQ(y.shape_[0], 3);
+    MINI_LLAMA_ASSERT_EQ(y.shape[0], 3);
     MINI_LLAMA_ASSERT_NEAR(y[0], 0.09003057f, 1e-5f);
     MINI_LLAMA_ASSERT_NEAR(y[1], 0.24472847f, 1e-5f);
     MINI_LLAMA_ASSERT_NEAR(y[2], 0.66524096f, 1e-5f);
@@ -226,7 +226,7 @@ static bool TestSoftmaxWrongDim() {
 
 static bool TestSoftmaxEmpty() {
     Tensor x;
-    x.shape_ = {0};
+    x.shape = {0};
     try {
         Softmax(x);
         MINI_LLAMA_ASSERT_FAIL("expected exception for Softmax on empty tensor");

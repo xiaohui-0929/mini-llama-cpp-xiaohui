@@ -626,7 +626,7 @@ static Tensor LoadTensorByName(std::ifstream& wf,
     }
     Tensor t(info.shape, 0.0f);
     // 尝试将指定大小的字节信息读出
-    wf.read(reinterpret_cast<char*>(t.data_.data()),
+    wf.read(reinterpret_cast<char*>(t.data.data()),
             static_cast<std::streamsize>(info.byte_size));
     if (static_cast<size_t>(wf.gcount()) != info.byte_size) {
         throw std::runtime_error("weights file ended while reading tensor: " + name);

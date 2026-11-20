@@ -86,9 +86,9 @@ static bool TestForwardBatchPrefillMatchesIndividual() {
     // 判断两种场景下的结果是否有区别
     MINI_LLAMA_ASSERT_EQ(logits1.num_dims(), 1);
     MINI_LLAMA_ASSERT_EQ(logits2.num_dims(), 1);
-    MINI_LLAMA_ASSERT_EQ(logits1.shape_[0], logits2.shape_[0]);
+    MINI_LLAMA_ASSERT_EQ(logits1.shape[0], logits2.shape[0]);
     for (size_t i = 0; i < logits1.size(); ++i) {
-        MINI_LLAMA_ASSERT_NEAR(logits1.data_[i], logits2.data_[i], 1e-6f);
+        MINI_LLAMA_ASSERT_NEAR(logits1.data[i], logits2.data[i], 1e-6f);
     }
     return true;
 }
@@ -115,9 +115,9 @@ static bool TestForwardBatchSingleMatchesIndividual() {
 
     MINI_LLAMA_ASSERT_EQ(logits1.num_dims(), 1);
     MINI_LLAMA_ASSERT_EQ(logits2.num_dims(), 1);
-    MINI_LLAMA_ASSERT_EQ(logits1.shape_[0], logits2.shape_[0]);
+    MINI_LLAMA_ASSERT_EQ(logits1.shape[0], logits2.shape[0]);
     for (size_t i = 0; i < logits1.size(); ++i) {
-        MINI_LLAMA_ASSERT_NEAR(logits1.data_[i], logits2.data_[i], 1e-6f);
+        MINI_LLAMA_ASSERT_NEAR(logits1.data[i], logits2.data[i], 1e-6f);
     }
     return true;
 }
@@ -244,8 +244,8 @@ static bool TestForwardBatchTokenOutOfRangeRejected() {
         MINI_LLAMA_ASSERT_EQ(ctx.pos, 0);
         MINI_LLAMA_ASSERT_EQ(ctx.n_prefill_tokens, 0);
         MINI_LLAMA_ASSERT_EQ(ctx.n_decode_tokens, 0);
-        MINI_LLAMA_ASSERT_EQ(ctx.kv_cache.keys.data_ == pristine.kv_cache.keys.data_, true);
-        MINI_LLAMA_ASSERT_EQ(ctx.kv_cache.values.data_ == pristine.kv_cache.values.data_, true);
+        MINI_LLAMA_ASSERT_EQ(ctx.kv_cache.keys.data == pristine.kv_cache.keys.data, true);
+        MINI_LLAMA_ASSERT_EQ(ctx.kv_cache.values.data == pristine.kv_cache.values.data, true);
     }
     return true;
 }
@@ -274,8 +274,8 @@ static bool TestForwardBatchPositionOutOfRangeRejected() {
         MINI_LLAMA_ASSERT_EQ(ctx.pos, 0);
         MINI_LLAMA_ASSERT_EQ(ctx.n_prefill_tokens, 0);
         MINI_LLAMA_ASSERT_EQ(ctx.n_decode_tokens, 0);
-        MINI_LLAMA_ASSERT_EQ(ctx.kv_cache.keys.data_ == pristine.kv_cache.keys.data_, true);
-        MINI_LLAMA_ASSERT_EQ(ctx.kv_cache.values.data_ == pristine.kv_cache.values.data_, true);
+        MINI_LLAMA_ASSERT_EQ(ctx.kv_cache.keys.data == pristine.kv_cache.keys.data, true);
+        MINI_LLAMA_ASSERT_EQ(ctx.kv_cache.values.data == pristine.kv_cache.values.data, true);
     }
     return true;
 }

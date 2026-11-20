@@ -8,18 +8,18 @@
 namespace mini_llama {
 
 struct Tensor {
-    std::vector<float> data_;
-    std::vector<int> shape_;
+    std::vector<float> data;
+    std::vector<int> shape;
 
     Tensor() = default;
     explicit Tensor(const std::vector<int>& input_shape, float fill = 0.0f);
 
     // 数据量
-    size_t size() const { return data_.size(); }
-    size_t num_elements() const { return data_.size(); }
+    size_t size() const { return data.size(); }
+    size_t num_elements() const { return data.size(); }
 
     // 维度
-    size_t num_dims() const { return shape_.size(); }
+    size_t num_dims() const { return shape.size(); }
 
     // 获取指定位置的元素索引
     size_t FlatIndex(const std::vector<int>& indices) const;
@@ -55,15 +55,15 @@ struct Tensor {
 
     // []运算符重载 获取指定索引的data
     float& operator[](size_t i) { 
-        if (i < data_.size()) {
-            return data_[i]; 
+        if (i < data.size()) {
+            return data[i]; 
         } else {
             throw std::out_of_range("Index out of range in operator[]");
         }
     }
     float operator[](size_t i) const { 
-        if (i < data_.size()) {
-            return data_[i]; 
+        if (i < data.size()) {
+            return data[i]; 
         } else {
             throw std::out_of_range("Index out of range in operator[]");
         }
