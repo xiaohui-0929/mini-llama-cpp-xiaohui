@@ -95,14 +95,18 @@ LoadedModel LoadModelAndTokenizer(
     // 获取 JSON+BIN 格式的配置文件路径
     if (std::filesystem::is_directory(path)) {
         model_path = path + "/model.bin";
-        config_path = path + "/model.json";
+        if (!explicit_config_path.empty()) {
+            config_path = explicit_config_path;
+        } else {
+            config_path = path + "/model.json";
+        }
     } else {
         model_path = path;
         if (!explicit_config_path.empty()) {
             config_path = explicit_config_path;
         } else {
             config_path =
-                std::filesystem::path(path).parent_path().string() + "/model.json";
+                (std::filesystem::path(path).parent_path() / "model.json").string();
         }
     }
     // 加载model
@@ -116,6 +120,11 @@ LoadedModel LoadModelAndTokenizer(
         tokenizer_path = explicit_tokenizer_path;
     }
 
+    // 尝试从JSON文件内获取tokenizer路径 
+    if (tokenizer_path.empty()) {
+        tokenizer_path = ResolveManifestTokenizerPath(config_path);
+    }
+
     // 尝试从model文件同路径下获取tokenizer路径 
     if (tokenizer_path.empty()) {
         std::filesystem::path dir = std::filesystem::is_directory(path) ? std::filesystem::path(path)
@@ -124,11 +133,6 @@ LoadedModel LoadModelAndTokenizer(
         if (std::filesystem::exists(auto_vocab)) {
             tokenizer_path = auto_vocab.string();
         }
-    }
-
-    // 尝试从JSON文件内获取tokenizer路径 
-    if (tokenizer_path.empty()) {
-        tokenizer_path = ResolveManifestTokenizerPath(config_path);
     }
 
     // 加载tokenizer

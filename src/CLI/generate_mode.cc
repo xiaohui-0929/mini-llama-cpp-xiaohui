@@ -287,31 +287,34 @@ int RunGenerate(int argc, char** argv) {
             request.sample_ms += ElapsedMs(stage_start);
             tokens.push_back(next_token);
 
-            std::cout << "decode loop...\n";
-            for (int i = 1; i < n_predict; ++i) {
-                MiniBatch decode_batch = MiniBatch::Single(
-                    tokens.back(), static_cast<int>(tokens.size() - 1));
-                stage_start = RequestClock::now();
-                logits = ForwardBatch(ctx, model, decode_batch);
-                double decode_ms = ElapsedMs(stage_start);
-                request.decode_ms += decode_ms;
-                request.RecordEvent("decode", decode_ms, 1,
-                                    "pos=" + std::to_string(tokens.size() - 1));
-                ++ctx.n_decode_tokens;
-                ++request.decode_tokens;
-                if (!dump_logits_dir.empty()) {
-                    DumpLogits(logits, dump_logits_dir + "/logits_step" +
-                                            std::to_string(step) + ".bin");
-                    ++step;
-                }
-                stage_start = RequestClock::now();
-                next_token = sampler.Sample(logits, sampling_params);
-                request.sample_ms += ElapsedMs(stage_start);
-                tokens.push_back(next_token);
-                if (next_token == tokenizer->eos_id()) {
-                    break;
-                }
+            if (next_token != tokenizer->eos_id()) {
+                std::cout << "decode loop...\n";
+                for (int i = 1; i < n_predict; ++i) {
+                    MiniBatch decode_batch = MiniBatch::Single(
+                        tokens.back(), static_cast<int>(tokens.size() - 1));
+                    stage_start = RequestClock::now();
+                    logits = ForwardBatch(ctx, model, decode_batch);
+                    double decode_ms = ElapsedMs(stage_start);
+                    request.decode_ms += decode_ms;
+                    request.RecordEvent("decode", decode_ms, 1,
+                                        "pos=" + std::to_string(tokens.size() - 1));
+                    ++ctx.n_decode_tokens;
+                    ++request.decode_tokens;
+                    if (!dump_logits_dir.empty()) {
+                        DumpLogits(logits, dump_logits_dir + "/logits_step" +
+                                                std::to_string(step) + ".bin");
+                        ++step;
+                    }
+                    stage_start = RequestClock::now();
+                    next_token = sampler.Sample(logits, sampling_params);
+                    request.sample_ms += ElapsedMs(stage_start);
+                    tokens.push_back(next_token);
+                    if (next_token == tokenizer->eos_id()) {
+                        break;
+                    }
+                }   
             }
+
         } else {
             std::cout << "decode loop skipped.\n";
         }

@@ -308,6 +308,8 @@ int RunChat(int argc, char** argv) {
                         term.Flush();
                         streamed_reply = current_reply;
                     }
+                } else {
+                    break;
                 }
 
                 // Decode计算下一个token
@@ -321,9 +323,6 @@ int RunChat(int argc, char** argv) {
                                     "pos=" + std::to_string(tokens.size() - 1));
                 ++ctx.n_decode_tokens;
                 ++request.decode_tokens;
-                if (next_token == tokenizer->eos_id()) {
-                    break;
-                }
             }
         } catch (const std::exception& e) {
             term.NewLine();
