@@ -51,3 +51,6 @@ third_party/*/
 *.pt
 *.pth
 *.onnx
+
+# --- Local notes (not tracked) ---
+docs/
