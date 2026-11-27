@@ -16,9 +16,12 @@
 #include "mini_llama/chat/chat.h"
 #include "mini_llama/chat/prompt_builder.h"
 #include "mini_llama/chat/terminal.h"
+#include "mini_llama/gguf/gguf.h"
 
 // enum class
 using mini_llama::RopeType;
+using mini_llama::GgufGgmlType;
+using mini_llama::GgufMetadataValueType;
 
 // struct
 using mini_llama::Tensor;
@@ -30,6 +33,10 @@ using mini_llama::ModelManifest;
 using mini_llama::MiniBatch;
 using mini_llama::SamplingParams;
 using mini_llama::ChatMessage;
+using mini_llama::GgufHeader;
+using mini_llama::GgufMetadataKV;
+using mini_llama::GgufMetadataValue;
+using mini_llama::GgufTensorInfo;
 
 // class
 using mini_llama::AsciiTokenizer;
@@ -40,6 +47,7 @@ using mini_llama::MiniSampler;
 using mini_llama::ChatSession;
 using mini_llama::PromptBuilder;
 using mini_llama::Terminal;
+using mini_llama::GgufReader;
 
 // function
 using mini_llama::MakeTensor1D;

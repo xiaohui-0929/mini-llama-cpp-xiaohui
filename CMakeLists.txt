@@ -59,6 +59,8 @@ set(MINI_LLAMA_CORE_SOURCES
     src/CLI/parsing_helper.cc
     src/CLI/run_mode.cc
     src/CLI/generate_mode.cc
+    src/CLI/inspect_gguf_mode.cc
+    src/gguf/gguf.cc
 )
 
 # --- Main executable ---
@@ -86,6 +88,7 @@ set(TEST_SOURCES
     tests/test_forward.cc
     tests/test_sampler.cc
     tests/test_chat.cc
+    tests/test_gguf.cc
 )
 
 add_executable(mini-llama-tests ${TEST_SOURCES})
