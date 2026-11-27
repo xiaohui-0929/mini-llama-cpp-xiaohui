@@ -5,6 +5,7 @@
 
 #include "mini_llama/CLI/generate_mode.h"
 #include "mini_llama/CLI/run_mode.h"
+#include "mini_llama/CLI/inspect_gguf_mode.h"
 #include "mini_llama/model/loader.h"
 
 namespace mini_llama {
@@ -17,7 +18,7 @@ static void PrintGlobalUsage(const char* prog) {
               << "  generate      One-shot text generation (default)\n"
               << "  run           Interactive chat mode\n"
               << "  inspect       Inspect model metadata\n"
-            //   << "  inspect-gguf  Inspect GGUF file\n"
+              << "  inspect-gguf  Inspect GGUF file\n"
             //   << "  bench         Benchmark inference performance\n"
             //   << "  --cuda-info   Print CUDA device information for the selected "
             //      "CUDA build\n"
@@ -116,6 +117,8 @@ int main(int argc, char** argv) {
       return mini_llama::RunChat(argc, argv);
     } else if (command == "inspect") {
       return mini_llama::RunInspect(argc, argv);
+    } else if (command == "inspect-gguf") {
+      return mini_llama::RunInspectGguf(argc, argv);
     } else if (command == "-h" || command == "--help") {
       mini_llama::PrintGlobalUsage(argv[0]);
       return 0;
